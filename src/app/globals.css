@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  /* Brand Palette */
+  --color-primary: #DFFF00; /* Cyber Lime */
+  --color-primary-foreground: #0A0A0A;
+  
+  --color-carbon-black: #0A0A0A;
+  --color-carbon-900: #121212;
+  --color-carbon-800: #1A1A1A;
+  --color-carbon-700: #262626;
+  --color-carbon-600: #333333;
+  
+  --color-success: #DFFF00;
+  --color-danger: #FF3B30;
+  --color-info: #0066FF;
+  
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui;
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui;
+  
+  /* Shadows & Radius */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  
+  --shadow-premium: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 8px 16px -4px rgba(0, 0, 0, 0.4);
+}
+
+:root {
+  --background: #0A0A0A;
+  --foreground: #F5F5F5;
+}
+
+.light {
+  --background: #ffffff;
+  --foreground: #0A0A0A;
+}
+
+.dark {
+  --background: #0A0A0A;
+  --foreground: #F5F5F5;
+}
+
+* {
+  border-color: rgba(38, 38, 38, 0.5); /* carbon-700/50 */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-carbon-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-carbon-700);
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-carbon-600);
+}
+
+/* Glassmorphism Utility */
+.glass {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-dark {
+  backdrop-filter: blur(24px);
+  background: rgba(10, 10, 10, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
