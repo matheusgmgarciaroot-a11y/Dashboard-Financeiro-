@@ -49,7 +49,7 @@ export function Header() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={openTransactionModal}
+          onClick={() => openTransactionModal()}
           className="flex items-center gap-2 bg-primary text-carbon-black px-4 py-2.5 rounded-sm font-display font-bold text-sm shadow-[0_0_20px_rgba(223,255,0,0.2)]"
         >
           <Plus size={18} strokeWidth={3} />

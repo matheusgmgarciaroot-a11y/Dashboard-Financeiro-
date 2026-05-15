@@ -8,6 +8,7 @@ export const MOCK_SUMMARY: FinancialSummary = {
   paidExpenses: 4584.07,
   pendingExpenses: 5346.98,
   projectedEndBalance: 1334.54,
+  realBalance: 5200.0,
   currentCash: 5200.0,
   reserveBalance: 3520.0,
   commitmentPercent: (9931.05 / 11265.59) * 100,

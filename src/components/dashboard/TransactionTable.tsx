@@ -5,13 +5,17 @@ import { Transaction } from "@/types/finance";
 import { formatCurrency, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MoreHorizontal, ArrowUpRight, ArrowDownLeft, FileDown, Edit2 } from "lucide-react";
+import { MoreHorizontal, ArrowUpRight, ArrowDownLeft, FileDown, Edit2, Trash2 } from "lucide-react";
+import { useFinanceStore } from "@/store/useFinanceStore";
+import { useUIStore } from "@/store/useUIStore";
 
 interface TransactionTableProps {
   transactions: Transaction[];
 }
 
 export function TransactionTable({ transactions }: TransactionTableProps) {
+  const { toggleTransactionStatus, deleteTransaction } = useFinanceStore();
+  const { openTransactionModal } = useUIStore();
   return (
     <div className="bg-carbon-900 border border-white/5 rounded-sm overflow-hidden">
       <div className="p-6 border-b border-white/5 flex items-center justify-between">
@@ -64,13 +68,25 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      tx.status === "completed" ? "bg-primary" : "bg-yellow-500"
-                    )} />
-                    <span className="text-xs text-neutral-400 capitalize">{tx.status === "completed" ? "Concluído" : "Pendente"}</span>
-                  </div>
+                  <button 
+                    onClick={() => toggleTransactionStatus(tx.id)}
+                    className="flex items-center gap-2 hover:bg-white/5 p-2 rounded-sm transition-all"
+                  >
+                    {tx.status === "pending" && new Date(tx.date) < new Date() ? (
+                      <>
+                        <div className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
+                        <span className="text-xs text-danger font-bold uppercase tracking-tighter">Vencido</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          tx.status === "completed" ? "bg-primary" : "bg-yellow-500"
+                        )} />
+                        <span className="text-xs text-neutral-400 capitalize">{tx.status === "completed" ? "Pago" : "Pendente"}</span>
+                      </>
+                    )}
+                  </button>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <span className={cn(
@@ -82,11 +98,17 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 text-neutral-500 hover:text-white transition-colors">
+                    <button 
+                      onClick={() => openTransactionModal(tx)}
+                      className="p-1.5 text-neutral-500 hover:text-white transition-colors"
+                    >
                       <Edit2 size={14} />
                     </button>
-                    <button className="p-1.5 text-neutral-500 hover:text-white transition-colors">
-                      <MoreHorizontal size={14} />
+                    <button 
+                      onClick={() => deleteTransaction(tx.id)}
+                      className="p-1.5 text-neutral-500 hover:text-danger transition-colors"
+                    >
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </td>

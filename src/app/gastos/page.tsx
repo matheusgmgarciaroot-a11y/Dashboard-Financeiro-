@@ -14,7 +14,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  Trash2
+  Trash2,
+  Edit2
 } from "lucide-react";
 import { useUIStore } from "@/store/useUIStore";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function GastosPage() {
-  const { transactions, deleteTransaction } = useFinanceStore();
+  const { transactions, deleteTransaction, toggleTransactionStatus } = useFinanceStore();
   const { openTransactionModal } = useUIStore();
   const [search, setSearch] = useState("");
   const [respFilter, setRespFilter] = useState("Todos");
@@ -60,7 +61,7 @@ export default function GastosPage() {
           <h1 className="text-3xl font-display font-bold text-white tracking-tight uppercase">Gastos do Mês</h1>
         </div>
         <button 
-          onClick={openTransactionModal}
+          onClick={() => openTransactionModal()}
           className="flex items-center gap-2 bg-primary text-carbon-black px-4 py-2 rounded-sm font-bold text-sm transition-transform hover:scale-105 active:scale-95"
         >
           <Plus size={18} /> Novo Gasto
@@ -154,7 +155,10 @@ export default function GastosPage() {
                     {format(new Date(expense.date), "dd/MM", { locale: ptBR })}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => toggleTransactionStatus(expense.id)}
+                      className="flex items-center gap-2 hover:bg-white/5 p-2 rounded-sm transition-all"
+                    >
                       {getStatusIcon(expense.status)}
                       <span className={cn(
                         "text-[10px] font-bold uppercase tracking-widest",
@@ -162,7 +166,7 @@ export default function GastosPage() {
                       )}>
                         {expense.status === "completed" ? "Pago" : "Pendente"}
                       </span>
-                    </div>
+                    </button>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -171,12 +175,20 @@ export default function GastosPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
-                      onClick={() => deleteTransaction(expense.id)}
-                      className="p-2 text-neutral-600 hover:text-danger transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => openTransactionModal(expense)}
+                        className="p-2 text-neutral-500 hover:text-white transition-colors"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => deleteTransaction(expense.id)}
+                        className="p-2 text-neutral-600 hover:text-danger transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </motion.tr>
               ))}

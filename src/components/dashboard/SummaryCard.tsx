@@ -24,8 +24,9 @@ export function SummaryCard({
 }: SummaryCardProps) {
   
   const formatValue = (val: number) => {
-    if (!isCurrency) return `${prefix}${val.toLocaleString("pt-BR")}`;
-    return val.toLocaleString("pt-BR", {
+    const safeVal = val ?? 0;
+    if (!isCurrency) return `${prefix}${safeVal.toLocaleString("pt-BR")}`;
+    return safeVal.toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
     });

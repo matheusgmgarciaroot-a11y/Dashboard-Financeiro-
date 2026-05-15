@@ -17,7 +17,8 @@ import {
   ChevronRight,
   LogOut,
   Sparkles,
-  BarChart3
+  BarChart3,
+  PieChart
 } from "lucide-react";
 import { useSidebar } from "@/hooks/useSidebar";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Visão do Mês", href: "/" },
   { icon: TrendingUp, label: "Receitas / Salários", href: "/receitas" },
   { icon: ArrowRightLeft, label: "Gastos do Mês", href: "/gastos" },
+  { icon: PieChart, label: "Análise de Gastos", href: "/analise" },
   { icon: ShieldCheck, label: "Reserva Financeira", href: "/reserva" },
   { icon: Wallet, label: "Valor em Caixa", href: "/caixa" },
   { icon: Zap, label: "Consultor de Gastos", href: "/simulador" },

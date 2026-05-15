@@ -9,7 +9,7 @@ import { X, ArrowUpCircle, ArrowDownCircle, Info, User, User2, Users } from "luc
 import { useUIStore } from "@/store/useUIStore";
 import { useFinanceStore } from "@/store/useFinanceStore";
 import { cn } from "@/lib/utils";
-import { Responsibility, Priority, ExpenseCategory } from "@/types/finance";
+import { Responsibility, Priority, ExpenseCategory, TransactionStatus } from "@/types/finance";
 
 const transactionSchema = z.object({
   description: z.string().min(3, "Descrio muito curta"),
@@ -22,13 +22,15 @@ const transactionSchema = z.object({
   responsible: z.enum(["Matheus", "Heloisa", "Ambos"]),
   priority: z.enum(["essential", "important", "optional"]),
   expenseType: z.enum(["fixo", "variavel", "parcelado", "eventual"]),
+  installmentCurrent: z.number().optional(),
+  installmentTotal: z.number().optional(),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
 
 export function TransactionModal() {
-  const { isTransactionModalOpen, closeTransactionModal } = useUIStore();
-  const { addTransaction, accounts } = useFinanceStore();
+  const { isTransactionModalOpen, closeTransactionModal, editingTransaction } = useUIStore();
+  const { addTransaction, updateTransaction, accounts } = useFinanceStore();
 
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
@@ -41,10 +43,54 @@ export function TransactionModal() {
     }
   });
 
+  // Effect to populate form when editing
+  React.useEffect(() => {
+    if (editingTransaction) {
+      reset({
+        description: editingTransaction.description.split(" (")[0], // Remove a info da parcela se houver
+        amount: editingTransaction.amount,
+        type: editingTransaction.type as "income" | "expense",
+        category: editingTransaction.category,
+        date: new Date(editingTransaction.date).toISOString().split("T")[0],
+        paymentMethod: editingTransaction.paymentMethod,
+        account: editingTransaction.account,
+        responsible: editingTransaction.responsible,
+        priority: editingTransaction.priority,
+        expenseType: editingTransaction.expenseType,
+        installmentCurrent: editingTransaction.installments?.current,
+        installmentTotal: editingTransaction.installments?.total,
+      });
+    } else {
+      reset({
+        type: "expense",
+        date: new Date().toISOString().split("T")[0],
+        responsible: "Ambos",
+        priority: "important",
+        expenseType: "variavel",
+      });
+    }
+  }, [editingTransaction, reset]);
+
   const transactionType = watch("type");
 
   const onSubmit = (data: TransactionFormData) => {
-    addTransaction({ ...data, status: "completed" });
+    const { installmentCurrent, installmentTotal, ...rest } = data;
+    
+    const txPayload = { 
+      ...rest, 
+      status: (editingTransaction?.status || "completed") as TransactionStatus,
+      installments: data.expenseType === "parcelado" ? {
+        current: installmentCurrent || 1,
+        total: installmentTotal || 1
+      } : undefined
+    };
+
+    if (editingTransaction) {
+      updateTransaction(editingTransaction.id, txPayload);
+    } else {
+      addTransaction(txPayload);
+    }
+
     reset();
     closeTransactionModal();
   };
@@ -69,7 +115,9 @@ export function TransactionModal() {
           >
             {/* Header */}
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <h3 className="text-xl font-display font-bold text-white tracking-tight">Nova Transação</h3>
+              <h3 className="text-xl font-display font-bold text-white tracking-tight">
+                {editingTransaction ? "Editar Transação" : "Nova Transação"}
+              </h3>
               <button onClick={closeTransactionModal} className="p-2 hover:bg-white/5 rounded-sm transition-colors text-neutral-500">
                 <X size={20} />
               </button>
@@ -166,6 +214,7 @@ export function TransactionModal() {
                     <option value="lazer">Lazer</option>
                     <option value="assinaturas">Assinaturas</option>
                     <option value="investimentos">Investimentos</option>
+                    <option value="reserva_financeira">Reserva Financeira</option>
                     <option value="pets">Pets</option>
                     <option value="compras">Compras</option>
                   </select>
@@ -184,6 +233,33 @@ export function TransactionModal() {
                   </select>
                 </div>
               </div>
+
+              {watch("expenseType") === "parcelado" && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="grid grid-cols-2 gap-4 p-4 bg-primary/5 border border-primary/10 rounded-sm"
+                >
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Parcela Atual</label>
+                    <input 
+                      type="number"
+                      {...register("installmentCurrent", { valueAsNumber: true })}
+                      className="w-full bg-carbon-black border border-primary/20 rounded-sm p-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Total de Parcelas</label>
+                    <input 
+                      type="number"
+                      {...register("installmentTotal", { valueAsNumber: true })}
+                      className="w-full bg-carbon-black border border-primary/20 rounded-sm p-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      placeholder="12"
+                    />
+                  </div>
+                </motion.div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">

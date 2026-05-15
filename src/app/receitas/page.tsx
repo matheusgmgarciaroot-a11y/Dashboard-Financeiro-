@@ -30,7 +30,7 @@ export default function ReceitasPage() {
           <h1 className="text-3xl font-display font-bold text-white tracking-tight uppercase">Receitas / Salários</h1>
         </div>
         <button 
-          onClick={openTransactionModal}
+          onClick={() => openTransactionModal()}
           className="flex items-center gap-2 bg-primary text-carbon-black px-4 py-2 rounded-sm font-bold text-sm transition-transform hover:scale-105 active:scale-95"
         >
           <Plus size={18} /> Adicionar Receita

@@ -6,7 +6,7 @@ export type Priority = "essential" | "important" | "optional";
 export type ExpenseCategory = 
   | "moradia" | "mercado" | "alimentacao" | "transporte" | "saude" 
   | "lazer" | "assinaturas" | "cartao_credito" | "investimentos" 
-  | "pets" | "compras" | "outros";
+  | "reserva_financeira" | "pets" | "compras" | "outros";
 
 export interface Transaction {
   id: string;
@@ -90,8 +90,9 @@ export interface FinancialSummary {
   optionalExpenses: number;
   paidExpenses: number;
   pendingExpenses: number;
-  projectedEndBalance: number;
-  currentCash: number;
+  projectedEndBalance: number; // Saldo final previsto
+  realBalance: number;         // Saldo "na mão" hoje (Receitas pagas - Gastos pagos)
+  currentCash: number;         // Saldo em conta inicial
   reserveBalance: number;
   commitmentPercent: number;
   healthScore: number;

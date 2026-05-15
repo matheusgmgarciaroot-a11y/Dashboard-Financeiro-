@@ -1,16 +1,15 @@
-import { Transaction, FinancialSummary, FinancialReserve, Investment, Account } from "@/types/finance";
+import { Transaction, FinancialSummary, FinancialReserve, Account } from "@/types/finance";
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO, addMonths } from "date-fns";
 
 export const calculateSummary = (
   transactions: Transaction[],
   accounts: Account[],
   reserve: FinancialReserve,
-  investments: Investment[]
+  targetDate: Date = new Date()
 ): FinancialSummary => {
-  const now = new Date();
   const monthInterval = {
-    start: startOfMonth(now),
-    end: endOfMonth(now),
+    start: startOfMonth(targetDate),
+    end: endOfMonth(targetDate),
   };
 
   const currentMonthTransactions = transactions.filter((tx) =>
@@ -21,8 +20,16 @@ export const calculateSummary = (
     .filter((tx) => tx.type === "income")
     .reduce((acc, tx) => acc + tx.amount, 0);
 
+  const paidIncome = currentMonthTransactions
+    .filter((tx) => tx.type === "income" && tx.status === "completed")
+    .reduce((acc, tx) => acc + tx.amount, 0);
+
   const totalExpenses = currentMonthTransactions
     .filter((tx) => tx.type === "expense")
+    .reduce((acc, tx) => acc + tx.amount, 0);
+
+  const paidExpenses = currentMonthTransactions
+    .filter((tx) => tx.type === "expense" && tx.status === "completed")
     .reduce((acc, tx) => acc + tx.amount, 0);
 
   const essentialExpenses = currentMonthTransactions
@@ -33,17 +40,22 @@ export const calculateSummary = (
     .filter((tx) => tx.type === "expense" && tx.priority === "optional")
     .reduce((acc, tx) => acc + tx.amount, 0);
 
-  const paidExpenses = currentMonthTransactions
-    .filter((tx) => tx.type === "expense" && tx.status === "completed")
-    .reduce((acc, tx) => acc + tx.amount, 0);
-
   const pendingExpenses = currentMonthTransactions
     .filter((tx) => tx.type === "expense" && tx.status === "pending")
     .reduce((acc, tx) => acc + tx.amount, 0);
 
-  const currentCash = accounts.reduce((acc, accnt) => acc + accnt.balance, 0);
+  // FILTRO: Saldo das contas (sempre atual)
+  const currentCash = accounts
+    .filter(acc => acc.id !== "4" && acc.type !== "savings")
+    .reduce((acc, accnt) => acc + accnt.balance, 0);
   
-  const projectedEndBalance = (currentCash + totalIncome) - totalExpenses;
+  const pendingIncome = totalIncome - paidIncome;
+  
+  // Saldo Real = O que você tem na conta AGORA
+  const realBalance = currentCash;
+  
+  // Saldo Projetado = O que você tem AGORA + o que vai entrar - o que vai sair (pendente)
+  const projectedEndBalance = currentCash + pendingIncome - pendingExpenses;
   
   const commitmentPercent = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
 
@@ -70,6 +82,7 @@ export const calculateSummary = (
     paidExpenses,
     pendingExpenses,
     projectedEndBalance,
+    realBalance,
     currentCash,
     reserveBalance: reserve.currentAmount,
     commitmentPercent,
@@ -82,33 +95,52 @@ export const calculateProjections = (
   transactions: Transaction[],
   accounts: Account[],
   reserve: FinancialReserve,
-  months: number = 6
+  months: number = 12 // Aumentado para 12 conforme pedido
 ) => {
   const projections = [];
-  let currentCash = accounts.reduce((acc, a) => acc + a.balance, 0);
+  let runningCash = accounts
+    .filter(acc => acc.id !== "4" && acc.type !== "savings")
+    .reduce((acc, a) => acc + a.balance, 0);
   
-  // Get recurring income and fixed expenses
+  // Entradas recorrentes (Base para projeção)
   const recurringIncome = transactions
-    .filter(t => t.type === "income" && t.expenseType === "eventual") // Assuming eventual/income means recurring for now
+    .filter(t => t.type === "income" && t.expenseType === "fixo") // Salários/Entradas Fixas
     .reduce((acc, t) => acc + t.amount, 0);
     
+  // Despesas Fixas Base
   const fixedExpenses = transactions
-    .filter(t => t.type === "expense" && (t.expenseType === "fixo" || t.expenseType === "parcelado"))
+    .filter(t => t.type === "expense" && t.expenseType === "fixo")
     .reduce((acc, t) => acc + t.amount, 0);
 
   for (let i = 1; i <= months; i++) {
     const monthDate = addMonths(new Date(), i);
-    // Add logic for installments that might end
-    // For simplicity, we'll use fixedExpenses
-    const monthlySobra = recurringIncome - fixedExpenses;
-    currentCash += monthlySobra;
+    const monthInterval = {
+      start: startOfMonth(monthDate),
+      end: endOfMonth(monthDate),
+    };
+    
+    // Busca transações já agendadas para este mês específico (ex: parcelas geradas)
+    const scheduledForMonth = transactions.filter(t => 
+      isWithinInterval(parseISO(t.date), monthInterval)
+    );
+
+    const monthlyIncome = recurringIncome + scheduledForMonth
+      .filter(t => t.type === "income" && t.expenseType !== "fixo")
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const monthlyExpenses = fixedExpenses + scheduledForMonth
+      .filter(t => t.type === "expense" && t.expenseType !== "fixo")
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const monthlySobra = monthlyIncome - monthlyExpenses;
+    runningCash += monthlySobra;
     
     projections.push({
       month: monthDate.toISOString(),
-      projectedBalance: currentCash,
+      projectedBalance: runningCash,
       sobra: monthlySobra,
-      income: recurringIncome,
-      expenses: fixedExpenses
+      income: monthlyIncome,
+      expenses: monthlyExpenses
     });
   }
   

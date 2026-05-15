@@ -20,6 +20,7 @@ const inter = Inter({
 });
 
 import { Header } from "@/components/layout/Header";
+import { CarbonGuardianChat } from "@/components/ai-insights/CarbonGuardianChat";
 
 export default function RootLayout({
   children,
@@ -46,6 +47,7 @@ export default function RootLayout({
           </main>
         </div>
         <TransactionModal />
+        <CarbonGuardianChat />
       </body>
     </html>
   );

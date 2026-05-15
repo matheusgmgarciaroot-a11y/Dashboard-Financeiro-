@@ -9,7 +9,7 @@ export function formatCurrency(value: number, currency: string = "BRL") {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: currency,
-  }).format(value);
+  }).format(value ?? 0);
 }
 
 export function formatNumber(value: number) {

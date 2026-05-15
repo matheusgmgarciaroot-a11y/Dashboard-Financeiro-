@@ -16,13 +16,17 @@ import {
 import { useFinanceStore } from "@/store/useFinanceStore";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export function PredictabilityCharts() {
   const { summary, projections } = useFinanceStore();
+  const [view, setView] = React.useState<"balance" | "comparison">("balance");
 
   const chartData = projections.map(p => ({
     name: format(new Date(p.month), "MMM", { locale: ptBR }),
     saldo: p.projectedBalance,
+    receita: p.income,
+    despesa: p.expenses,
     sobra: p.sobra
   }));
 
@@ -30,53 +34,102 @@ export function PredictabilityCharts() {
     val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="space-y-8">
       {/* Projection Chart */}
       <div className="bg-carbon-900 border border-white/5 p-8 rounded-sm">
-        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-8">Evoluo do Saldo (6 Meses)</h3>
-        <div className="h-[300px]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest">
+            {view === "balance" ? "Evolução do Saldo (12 Meses)" : "Receitas vs Despesas (12 Meses)"}
+          </h3>
+          <div className="flex gap-2 p-1 bg-white/5 rounded-sm border border-white/5">
+            <button 
+              onClick={() => setView("balance")}
+              className={cn(
+                "px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all rounded-xs",
+                view === "balance" ? "bg-primary text-carbon-black" : "text-neutral-500 hover:text-white"
+              )}
+            >
+              Saldo
+            </button>
+            <button 
+              onClick={() => setView("comparison")}
+              className={cn(
+                "px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all rounded-xs",
+                view === "comparison" ? "bg-primary text-carbon-black" : "text-neutral-500 hover:text-white"
+              )}
+            >
+              Comparativo
+            </button>
+          </div>
+        </div>
+
+        <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#DFFF00" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#DFFF00" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "500" }}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "500" }}
-                tickFormatter={(val) => `R$ ${val/1000}k`}
-              />
-              <Tooltip 
-                contentStyle={{ backgroundColor: "#0A0A0A", border: "1px solid #ffffff10", borderRadius: "4px" }}
-                itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
-                formatter={(val: any) => formatCurrency(Number(val))}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="saldo" 
-                stroke="#DFFF00" 
-                strokeWidth={2}
-                fillOpacity={1} 
-                fill="url(#colorSaldo)" 
-              />
-            </AreaChart>
+            {view === "balance" ? (
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#DFFF00" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#DFFF00" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "500" }}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "500" }}
+                  tickFormatter={(val) => `R$ ${val/1000}k`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: "#0A0A0A", border: "1px solid #ffffff10", borderRadius: "4px" }}
+                  itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
+                  formatter={(val: any) => formatCurrency(Number(val))}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="saldo" 
+                  stroke="#DFFF00" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorSaldo)" 
+                />
+              </AreaChart>
+            ) : (
+              <BarChart data={chartData} barGap={8}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "500" }}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "500" }}
+                  tickFormatter={(val) => `R$ ${val/1000}k`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: "#0A0A0A", border: "1px solid #ffffff10", borderRadius: "4px" }}
+                  itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
+                  formatter={(val: any) => formatCurrency(Number(val))}
+                />
+                <Bar dataKey="receita" fill="#DFFF00" radius={[2, 2, 0, 0]} name="Receitas" />
+                <Bar dataKey="despesa" fill="#ffffff20" radius={[2, 2, 0, 0]} name="Despesas" />
+              </BarChart>
+            )}
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Composition Chart */}
       <div className="bg-carbon-900 border border-white/5 p-8 rounded-sm">
-        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-8">Composio Mensal Atual</h3>
+        <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-8">Composição Mensal Atual</h3>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
@@ -109,10 +162,6 @@ export function PredictabilityCharts() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
-        <div className="mt-4 flex justify-between text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
-           <span>Gastos Fixos: {((summary.essentialExpenses / summary.totalIncome) * 100).toFixed(0)}%</span>
-           <span>Sobra: {((summary.projectedEndBalance / summary.totalIncome) * 100).toFixed(0)}%</span>
         </div>
       </div>
     </div>
