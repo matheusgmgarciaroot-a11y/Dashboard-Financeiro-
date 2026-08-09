@@ -218,6 +218,7 @@ export const useFinanceStore = create<FinanceState>()(
     {
       name: "carbon-finance-storage",
       storage: createJSONStorage(() => localStorage),
+      version: 1,
     }
   )
 );
