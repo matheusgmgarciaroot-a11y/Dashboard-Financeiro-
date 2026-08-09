@@ -20,5 +20,6 @@ export const MOCK_ACCOUNTS: Account[] = [];
 
 export const MOCK_TRANSACTIONS: Transaction[] = [];
 
-export const MOCK_CHART_DATA = [];
-
+export const MOCK_CHART_DATA = [
+  { name: "Mês Atual", receita: 0, despesa: 0 }
+];

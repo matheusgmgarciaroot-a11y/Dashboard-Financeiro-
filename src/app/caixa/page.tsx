@@ -3,21 +3,13 @@
 import React, { useState } from "react";
 import { useFinanceStore } from "@/store/useFinanceStore";
 import { motion } from "framer-motion";
-import { Wallet, Plus, User, User2, Users, CreditCard, Banknote, Landmark, Save, Pencil, X } from "lucide-react";
+import { Wallet, Plus, User, User2, Users, CreditCard, Banknote, Landmark, Save, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function CaixaPage() {
-  const { accounts, updateAccountBalance, addAccount } = useFinanceStore();
+  const { accounts, updateAccountBalance } = useFinanceStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  
-  const [showModal, setShowModal] = useState(false);
-  const [newAcc, setNewAcc] = useState({
-    name: "",
-    institution: "",
-    type: "checking" as any,
-    owner: "Matheus" as any,
-  });
 
   const formatCurrency = (val: number) => 
     val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -40,24 +32,8 @@ export default function CaixaPage() {
     setEditingId(null);
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAcc.name || !newAcc.institution) return;
-    
-    await addAccount({
-      name: newAcc.name,
-      institution: newAcc.institution,
-      type: newAcc.type,
-      owner: newAcc.owner,
-      currency: "BRL",
-    });
-    
-    setShowModal(false);
-    setNewAcc({ name: "", institution: "", type: "checking", owner: "Matheus" });
-  };
-
   return (
-    <div className="p-8 space-y-8 max-w-[1200px] mx-auto relative">
+    <div className="p-8 space-y-8 max-w-[1200px] mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Wallet className="text-primary" size={24} />
@@ -117,7 +93,7 @@ export default function CaixaPage() {
                       type="number"
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
-                      className="bg-white/5 border border-primary/50 rounded-xs p-2 text-xl font-display font-bold text-white w-full outline-none"
+                      className="bg-white/5 border border-primary/50 rounded-xs p-2 text-xl font-display font-bold text-white w-full"
                    />
                    <button 
                       onClick={() => handleSave(acc.id)}
@@ -144,89 +120,13 @@ export default function CaixaPage() {
           </div>
         ))}
 
-        <button 
-          onClick={() => setShowModal(true)}
-          className="border border-dashed border-white/10 rounded-sm p-6 flex flex-col items-center justify-center gap-3 text-neutral-500 hover:text-primary hover:border-primary/50 transition-all group min-h-[160px]"
-        >
+        <button className="border border-dashed border-white/10 rounded-sm p-6 flex flex-col items-center justify-center gap-3 text-neutral-500 hover:text-primary hover:border-primary/50 transition-all group">
            <div className="p-2 bg-white/5 rounded-full group-hover:bg-primary/20">
               <Plus size={20} />
            </div>
            <span className="text-xs font-bold uppercase tracking-widest">Adicionar Conta</span>
         </button>
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-carbon-900 border border-carbon-700 p-6 rounded-lg w-full max-w-md shadow-2xl relative"
-          >
-            <button 
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-            <h3 className="text-xl font-bold text-white mb-6">Nova Conta</h3>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Nome da Conta</label>
-                <input 
-                  required
-                  value={newAcc.name}
-                  onChange={e => setNewAcc({...newAcc, name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-md p-3 text-white outline-none focus:border-primary"
-                  placeholder="Ex: Conta Corrente Itaú"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Instituição</label>
-                <input 
-                  required
-                  value={newAcc.institution}
-                  onChange={e => setNewAcc({...newAcc, institution: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-md p-3 text-white outline-none focus:border-primary"
-                  placeholder="Ex: Itaú, Nubank, Bradesco"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Tipo</label>
-                  <select 
-                    value={newAcc.type}
-                    onChange={e => setNewAcc({...newAcc, type: e.target.value as any})}
-                    className="w-full bg-carbon-800 border border-white/10 rounded-md p-3 text-white outline-none focus:border-primary"
-                  >
-                    <option value="checking">Corrente</option>
-                    <option value="savings">Poupança</option>
-                    <option value="investment">Investimento</option>
-                    <option value="cash">Dinheiro Físico</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Dono</label>
-                  <select 
-                    value={newAcc.owner}
-                    onChange={e => setNewAcc({...newAcc, owner: e.target.value as any})}
-                    className="w-full bg-carbon-800 border border-white/10 rounded-md p-3 text-white outline-none focus:border-primary"
-                  >
-                    <option value="Matheus">Matheus</option>
-                    <option value="Heloisa">Heloisa</option>
-                    <option value="Ambos">Ambos</option>
-                  </select>
-                </div>
-              </div>
-              <button 
-                type="submit"
-                className="w-full mt-4 bg-primary text-carbon-black font-bold py-3 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                Criar Conta
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
