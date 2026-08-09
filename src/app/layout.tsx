@@ -21,6 +21,8 @@ const inter = Inter({
 
 import { Header } from "@/components/layout/Header";
 import { CarbonGuardianChat } from "@/components/ai-insights/CarbonGuardianChat";
+import { SupabaseProvider } from "@/components/providers/SupabaseProvider";
+import { usePathname } from "next/navigation";
 
 export default function RootLayout({
   children,
@@ -28,26 +30,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const { isExpanded } = useSidebar();
+  const pathname = usePathname();
+  const isAuthPage = pathname === "/auth";
 
   return (
     <html lang="pt-BR" className={`${outfit.variable} ${inter.variable} dark`} style={{ colorScheme: "dark" }}>
       <body className="bg-background text-foreground font-sans selection:bg-primary selection:text-carbon-black antialiased overflow-x-hidden">
-        <div className="min-h-screen flex">
-          <Sidebar />
-          <main 
-            className={cn(
-              "flex-1 transition-all duration-300 ease-in-out min-h-screen flex flex-col",
-              isExpanded ? "pl-[240px]" : "pl-20"
-            )}
-          >
-            <Header />
-            <div className="flex-1">
+        <SupabaseProvider>
+          {isAuthPage ? (
+            <main className="min-h-screen flex items-center justify-center">
               {children}
+            </main>
+          ) : (
+            <div className="min-h-screen flex">
+              <Sidebar />
+              <main 
+                className={cn(
+                  "flex-1 transition-all duration-300 ease-in-out min-h-screen flex flex-col",
+                  isExpanded ? "pl-[240px]" : "pl-20"
+                )}
+              >
+                <Header />
+                <div className="flex-1">
+                  {children}
+                </div>
+              </main>
             </div>
-          </main>
-        </div>
-        <TransactionModal />
-        <CarbonGuardianChat />
+          )}
+          {!isAuthPage && <TransactionModal />}
+          {!isAuthPage && <CarbonGuardianChat />}
+        </SupabaseProvider>
       </body>
     </html>
   );
