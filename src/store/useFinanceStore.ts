@@ -82,6 +82,27 @@ export const useFinanceStore = create<FinanceState>()(
           .select("*")
           .eq("user_id", user.id);
 
+        let finalAccounts = accountsData || [];
+
+        // Auto-seed contas iniciais se o usuário for novo (array vazio)
+        if (finalAccounts.length === 0) {
+          const defaultAccounts = [
+            { name: "Conta Matheus", balance: 0, type: "checking", owner: "Matheus", institution: "Itaú", currency: "BRL", color: "#DFFF00", user_id: user.id },
+            { name: "Conta Heloisa", balance: 0, type: "checking", owner: "Heloisa", institution: "Nubank", currency: "BRL", color: "#FF69B4", user_id: user.id },
+            { name: "Dinheiro Físico", balance: 0, type: "cash", owner: "Ambos", institution: "Carteira", currency: "BRL", color: "#4ADE80", user_id: user.id },
+            { name: "Reserva Emergência", balance: 0, type: "savings", owner: "Ambos", institution: "Nubank", currency: "BRL", color: "#0066FF", user_id: user.id }
+          ];
+          
+          const { data: insertedAccounts } = await supabase
+            .from("accounts")
+            .insert(defaultAccounts)
+            .select();
+            
+          if (insertedAccounts) {
+            finalAccounts = insertedAccounts;
+          }
+        }
+
         // Fetch Transactions
         const { data: txData } = await supabase
           .from("transactions")
@@ -94,7 +115,7 @@ export const useFinanceStore = create<FinanceState>()(
           .select("*")
           .eq("user_id", user.id);
 
-        if (accountsData) set({ accounts: accountsData as any });
+        if (finalAccounts) set({ accounts: finalAccounts as any });
         if (txData) set({ transactions: txData as any });
         if (invData) set({ investments: invData as any });
         
