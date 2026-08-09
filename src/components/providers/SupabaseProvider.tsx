@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
+import { useFinanceStore } from "@/store/useFinanceStore";
 
 interface SupabaseContextType {
   session: Session | null;
@@ -35,6 +36,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        if (session) {
+          useFinanceStore.getState().fetchInitialData();
+        }
       }
     }
 
@@ -45,6 +49,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        
+        if (session) {
+          useFinanceStore.getState().fetchInitialData();
+        }
         
         if (session && pathname === "/auth") {
           router.push("/");
