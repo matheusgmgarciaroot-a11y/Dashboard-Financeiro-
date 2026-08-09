@@ -52,7 +52,7 @@ export default function AuthPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-transparent dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-transparent text-gray-900 placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none transition"
               placeholder="seu@email.com"
               required
             />
@@ -66,7 +66,7 @@ export default function AuthPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-transparent dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-transparent text-gray-900 placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500 focus:ring-2 focus:ring-emerald-500 outline-none transition"
               placeholder="••••••••"
               required
             />
