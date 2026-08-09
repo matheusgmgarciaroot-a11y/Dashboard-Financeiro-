@@ -38,25 +38,13 @@ interface FinanceState {
 
 // Initial Mock Data from Spreadsheet
 const INITIAL_RESERVE: FinancialReserve = {
-  currentAmount: 3520, // Conforme informado pelo usuário
-  goalAmount: 27504.40, // Conforme planilha
-  monthlyContribution: 519.03, // Reserva financeira 5% da planilha
-  monthlyExpenses: 9931.05, // Total geral de despesas da planilha
+  currentAmount: 0,
+  goalAmount: 0,
+  monthlyContribution: 0,
+  monthlyExpenses: 0,
 };
 
-const INITIAL_INVESTMENTS: Investment[] = [
-  {
-    id: "1",
-    name: "Ações Brasil",
-    type: "Renda Variável",
-    amountInvested: 25000,
-    monthlyAport: 1000,
-    expectedReturn: 12,
-    goal: "Aposentadoria",
-    currentValue: 28000,
-    responsible: "Ambos",
-  }
-];
+const INITIAL_INVESTMENTS: Investment[] = [];
 
 export const useFinanceStore = create<FinanceState>()(
   persist(
