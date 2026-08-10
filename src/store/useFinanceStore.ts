@@ -16,6 +16,8 @@ import { getSimulationRecommendation } from "@/lib/recommendations";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/useAuthStore";
 
+let isSyncingPlannedExpenses = false;
+
 interface FinanceState {
   transactions: Transaction[];
   accounts: Account[];
@@ -125,6 +127,33 @@ export const useFinanceStore = create<FinanceState>()(
           .select("*")
           .eq("user_id", user.id);
 
+        let finalTxs = txData || [];
+        
+        // Remove duplicate planned expenses (fixo) that might have been created by race conditions
+        const seenFixo = new Set<string>();
+        const toDelete: string[] = [];
+        const cleanTxs: any[] = [];
+        
+        finalTxs.forEach((t: any) => {
+          if (t.expenseType === "fixo") {
+            const d = new Date(t.date);
+            const key = `${t.description.toLowerCase()}-${d.getMonth()}-${d.getFullYear()}`;
+            if (seenFixo.has(key)) {
+              toDelete.push(t.id);
+            } else {
+              seenFixo.add(key);
+              cleanTxs.push(t);
+            }
+          } else {
+            cleanTxs.push(t);
+          }
+        });
+        
+        if (toDelete.length > 0) {
+          await supabase.from("transactions").delete().in("id", toDelete);
+          finalTxs = cleanTxs;
+        }
+
         // Fetch Investments
         const { data: invData } = await supabase
           .from("investments")
@@ -132,7 +161,7 @@ export const useFinanceStore = create<FinanceState>()(
           .eq("user_id", user.id);
 
         if (finalAccounts) set({ accounts: finalAccounts as any });
-        if (txData) set({ transactions: txData as any });
+        if (finalTxs) set({ transactions: finalTxs as any });
         if (invData) set({ investments: invData as any });
         
         await get().syncPlannedExpenses();
@@ -324,37 +353,44 @@ export const useFinanceStore = create<FinanceState>()(
       },
 
       syncPlannedExpenses: async () => {
-        // Import inline to avoid circular dependency issues at the top level
-        const { usePlanningStore } = await import('@/store/usePlanningStore');
-        const planned = usePlanningStore.getState().expenses;
-        const { transactions, selectedDate, addTransaction } = get();
+        if (isSyncingPlannedExpenses) return;
+        isSyncingPlannedExpenses = true;
         
-        const targetDate = new Date(selectedDate);
-        const targetMonth = targetDate.getMonth();
-        const targetYear = targetDate.getFullYear();
-        
-        const currentMonthFixedTxs = transactions.filter(t => {
-          const d = new Date(t.date);
-          return d.getMonth() === targetMonth && d.getFullYear() === targetYear && t.expenseType === "fixo";
-        });
+        try {
+          // Import inline to avoid circular dependency issues at the top level
+          const { usePlanningStore } = await import('@/store/usePlanningStore');
+          const planned = usePlanningStore.getState().expenses;
+          const { transactions, selectedDate, addTransaction } = get();
+          
+          const targetDate = new Date(selectedDate);
+          const targetMonth = targetDate.getMonth();
+          const targetYear = targetDate.getFullYear();
+          
+          const currentMonthFixedTxs = transactions.filter(t => {
+            const d = new Date(t.date);
+            return d.getMonth() === targetMonth && d.getFullYear() === targetYear && t.expenseType === "fixo";
+          });
 
-        for (const p of planned) {
-          const exists = currentMonthFixedTxs.some(t => t.description.toLowerCase() === p.name.toLowerCase());
-          if (!exists) {
-            await addTransaction({
-              description: p.name,
-              amount: p.amount,
-              type: "expense",
-              category: p.isEssential ? "moradia" : "outros",
-              date: new Date(targetYear, targetMonth, 5).toISOString(), // Dia 5 como padrão de vencimento
-              paymentMethod: "pix",
-              account: "Conta Matheus", // Default
-              responsible: "Ambos",
-              priority: p.isEssential ? "essential" : "optional",
-              expenseType: "fixo",
-              status: p.isPaid ? "completed" : "pending"
-            } as any);
+          for (const p of planned) {
+            const exists = currentMonthFixedTxs.some(t => t.description.toLowerCase() === p.name.toLowerCase());
+            if (!exists) {
+              await addTransaction({
+                description: p.name,
+                amount: p.amount,
+                type: "expense",
+                category: p.isEssential ? "moradia" : "outros",
+                date: new Date(targetYear, targetMonth, 5).toISOString(), // Dia 5 como padrão de vencimento
+                paymentMethod: "pix",
+                account: "Conta Matheus", // Default
+                responsible: "Ambos",
+                priority: p.isEssential ? "essential" : "optional",
+                expenseType: "fixo",
+                status: p.isPaid ? "completed" : "pending"
+              } as any);
+            }
           }
+        } finally {
+          isSyncingPlannedExpenses = false;
         }
       },
 
