@@ -127,7 +127,16 @@ export const useFinanceStore = create<FinanceState>()(
           .select("*")
           .eq("user_id", user.id);
 
-        let finalTxs = txData || [];
+        let finalTxs = (txData || []).map((t: any) => ({
+          ...t,
+          expenseType: t.expense_type,
+          paymentMethod: t.payment_method,
+          account: t.account_name,
+          installments: t.installments_total ? {
+            current: t.installments_current,
+            total: t.installments_total
+          } : undefined
+        }));
         
         // Remove duplicate planned expenses (fixo) that might have been created by race conditions
         const seenFixo = new Set<string>();
