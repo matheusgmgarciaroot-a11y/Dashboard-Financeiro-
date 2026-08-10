@@ -37,6 +37,7 @@ interface FinanceState {
   runSimulation: (request: SimulationRequest) => SimulationResult;
   setSelectedDate: (date: string) => void;
   syncPlannedExpenses: () => Promise<void>;
+  syncPercentageExpenses: () => Promise<void>;
   refreshSummary: () => void;
   fetchInitialData: () => Promise<void>;
 }
@@ -174,6 +175,7 @@ export const useFinanceStore = create<FinanceState>()(
         if (invData) set({ investments: invData as any });
         
         await get().syncPlannedExpenses();
+        await get().syncPercentageExpenses();
         get().refreshSummary();
       },
 
@@ -272,6 +274,10 @@ export const useFinanceStore = create<FinanceState>()(
           reserve: newReserve
         });
         
+        if (txData.type === "income") {
+          get().syncPercentageExpenses();
+        }
+
         get().refreshSummary();
       },
 
@@ -297,11 +303,19 @@ export const useFinanceStore = create<FinanceState>()(
           await supabase.from("transactions").update(payload).eq("id", id).eq("user_id", user.id);
         }
 
+        const isIncome = get().transactions.find(t => t.id === id)?.type === "income";
+        
         set({ transactions: newTransactions });
+        
+        if (isIncome || txData.type === "income") {
+          get().syncPercentageExpenses();
+        }
+        
         get().refreshSummary();
       },
 
       deleteTransaction: async (id) => {
+        const txToDelete = get().transactions.find(tx => tx.id === id);
         const newTransactions = get().transactions.filter(tx => tx.id !== id);
         
         const user = useAuthStore.getState().user;
@@ -310,6 +324,11 @@ export const useFinanceStore = create<FinanceState>()(
         }
 
         set({ transactions: newTransactions });
+        
+        if (txToDelete?.type === "income") {
+          get().syncPercentageExpenses();
+        }
+
         get().refreshSummary();
       },
 
@@ -400,6 +419,93 @@ export const useFinanceStore = create<FinanceState>()(
           }
         } finally {
           isSyncingPlannedExpenses = false;
+        }
+      },
+
+      syncPercentageExpenses: async () => {
+        const { transactions, selectedDate, addTransaction, updateTransaction } = get();
+        const targetDate = new Date(selectedDate);
+        const targetMonth = targetDate.getMonth();
+        const targetYear = targetDate.getFullYear();
+
+        // 1. Somar todas as rendas do mês atual
+        const monthlyIncome = transactions.filter(t => {
+          const d = new Date(t.date);
+          return t.type === "income" && d.getMonth() === targetMonth && d.getFullYear() === targetYear;
+        }).reduce((acc, t) => acc + t.amount, 0);
+
+        if (monthlyIncome <= 0) return;
+
+        // 2. Valores calculados
+        const dizimoAmount = monthlyIncome * 0.10;
+        const ofertaAmount = monthlyIncome * 0.02;
+        const reservaAmount = monthlyIncome * 0.05;
+
+        // 3. Identificar se as transações já existem no mês atual
+        const currentMonthTxs = transactions.filter(t => {
+          const d = new Date(t.date);
+          return d.getMonth() === targetMonth && d.getFullYear() === targetYear && t.type === "expense";
+        });
+
+        const dizimoTx = currentMonthTxs.find(t => t.description.toLowerCase() === "dízimo" || t.description.toLowerCase() === "dizimo");
+        const ofertaTx = currentMonthTxs.find(t => t.description.toLowerCase() === "oferta");
+        const reservaTx = currentMonthTxs.find(t => t.description.toLowerCase() === "aporte reserva" || t.description.toLowerCase() === "reserva financeira");
+
+        // 4. Atualizar ou Criar Dízimo
+        if (dizimoTx) {
+          if (Math.abs(dizimoTx.amount - dizimoAmount) > 0.01) await updateTransaction(dizimoTx.id, { amount: dizimoAmount });
+        } else {
+          await addTransaction({
+            description: "Dízimo",
+            amount: dizimoAmount,
+            type: "expense",
+            category: "outros",
+            date: new Date(targetYear, targetMonth, 10).toISOString(),
+            paymentMethod: "pix",
+            account: "Conta Matheus",
+            responsible: "Ambos",
+            priority: "essential",
+            expenseType: "fixo",
+            status: "pending"
+          } as any);
+        }
+
+        // 5. Atualizar ou Criar Oferta
+        if (ofertaTx) {
+          if (Math.abs(ofertaTx.amount - ofertaAmount) > 0.01) await updateTransaction(ofertaTx.id, { amount: ofertaAmount });
+        } else {
+          await addTransaction({
+            description: "Oferta",
+            amount: ofertaAmount,
+            type: "expense",
+            category: "outros",
+            date: new Date(targetYear, targetMonth, 10).toISOString(),
+            paymentMethod: "pix",
+            account: "Conta Matheus",
+            responsible: "Ambos",
+            priority: "essential",
+            expenseType: "fixo",
+            status: "pending"
+          } as any);
+        }
+
+        // 6. Atualizar ou Criar Reserva
+        if (reservaTx) {
+          if (Math.abs(reservaTx.amount - reservaAmount) > 0.01) await updateTransaction(reservaTx.id, { amount: reservaAmount });
+        } else {
+          await addTransaction({
+            description: "Aporte Reserva",
+            amount: reservaAmount,
+            type: "expense",
+            category: "reserva_financeira",
+            date: new Date(targetYear, targetMonth, 10).toISOString(),
+            paymentMethod: "transfer",
+            account: "Conta Matheus",
+            responsible: "Ambos",
+            priority: "essential",
+            expenseType: "fixo",
+            status: "pending"
+          } as any);
         }
       },
 
