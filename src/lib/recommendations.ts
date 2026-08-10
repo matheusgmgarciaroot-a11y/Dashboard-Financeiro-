@@ -10,7 +10,7 @@ export const getSimulationRecommendation = (
   const monthlyImpact = isInstallment ? totalValue / installmentsCount : totalValue;
   const newTotalExpenses = summary.totalExpenses + monthlyImpact;
   const newCommitmentPercent = (newTotalExpenses / summary.totalIncome) * 100;
-  const newProjectedBalance = summary.projectedEndBalance - monthlyImpact;
+  const newProjectedBalance = summary.balance - monthlyImpact;
   
   const monthsCovered = reserve.monthlyExpenses > 0 ? reserve.currentAmount / reserve.monthlyExpenses : 0;
   

@@ -66,7 +66,7 @@ export function CarbonGuardianChat() {
 
       if (queriedAmount) {
         setLastAmount(queriedAmount); // Salva na memória de contexto
-        const sobra = summary.projectedEndBalance;
+        const sobra = summary.balance;
         const percentOfSobra = (queriedAmount / (sobra > 0 ? sobra : 1)) * 100;
 
         if (sobra <= 0) {
@@ -79,7 +79,7 @@ export function CarbonGuardianChat() {
           response = `Análise concluída: Esse gasto de ${queriedAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} cabe perfeitamente no orçamento! Representa apenas ${(percentOfSobra).toFixed(1)}% da sua sobra projetada (${sobra.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}). Podem seguir sem medo.`;
         }
       } else if (lowerInput.includes("saldo") || lowerInput.includes("dinheiro") || lowerInput.includes("quanto temos") || lowerInput.includes("caixa")) {
-        response = `Matheus e Heloísa, no momento vocês têm ${summary.currentCash.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} líquidos. Se mantiverem os gastos planejados, terminarão o mês com ${summary.projectedEndBalance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} de sobra real.`;
+        response = `Matheus e Heloísa, no momento vocês têm ${summary.balance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} líquidos. Se mantiverem os gastos planejados, terminarão o mês com ${summary.balance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} de sobra real.`;
       } else if (lowerInput.includes("previsão") || lowerInput.includes("futuro") || lowerInput.includes("12 meses") || lowerInput.includes("ano que vem") || lowerInput.includes("projeção")) {
         const finalBalance = projections[projections.length - 1].projectedBalance;
         response = `Projeção Carbon de 12 meses: Se o ritmo atual for mantido, vocês chegarão ao fim do ciclo com ${finalBalance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} acumulados, já descontando as parcelas que terminam no caminho.`;

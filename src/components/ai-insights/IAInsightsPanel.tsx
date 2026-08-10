@@ -97,7 +97,7 @@ export function IAInsightsPanel() {
           </div>
           <div className="text-right border-l border-white/10 pl-8">
             <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Sobra Livre</p>
-            <p className="text-2xl font-display font-bold text-primary">{formatCurrency(summary.projectedEndBalance)}</p>
+            <p className="text-2xl font-display font-bold text-primary">{formatCurrency(summary.balance)}</p>
           </div>
         </div>
       </div>

@@ -57,7 +57,7 @@ export function MonthOrganization() {
             <CalendarDays size={20} />
             <span className="text-xs font-bold uppercase tracking-widest">Saldo Projetado</span>
           </div>
-          <p className="text-2xl font-display font-bold text-white">{formatCurrency(summary.projectedEndBalance)}</p>
+          <p className="text-2xl font-display font-bold text-white">{formatCurrency(summary.balance)}</p>
           <p className="text-[10px] text-primary/70 font-bold uppercase mt-1">Ao fim de 30 dias</p>
         </div>
       </div>

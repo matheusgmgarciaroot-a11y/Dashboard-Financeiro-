@@ -7,9 +7,9 @@ export const MOCK_SUMMARY: FinancialSummary = {
   optionalExpenses: 0,
   paidExpenses: 0,
   pendingExpenses: 0,
-  projectedEndBalance: 0,
-  realBalance: 0,
-  currentCash: 0,
+  balance: 0,
+  
+  
   reserveBalance: 0,
   commitmentPercent: 0,
   healthScore: 100,

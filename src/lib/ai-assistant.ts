@@ -43,7 +43,7 @@ export const getAIInsights = (
   }
 
   // 3. Previsibilidade
-  const projectedBalance = summary.projectedEndBalance;
+  const projectedBalance = summary.balance;
   if (projectedBalance < 0) {
     insights.push({
       title: "Risco de Fechamento Negativo",

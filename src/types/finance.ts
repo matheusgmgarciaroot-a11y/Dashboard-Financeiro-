@@ -90,9 +90,7 @@ export interface FinancialSummary {
   optionalExpenses: number;
   paidExpenses: number;
   pendingExpenses: number;
-  projectedEndBalance: number; // Saldo final previsto
-  realBalance: number;         // Saldo "na mão" hoje (Receitas pagas - Gastos pagos)
-  currentCash: number;         // Saldo em conta inicial
+  balance: number; // Saldo do mês atual (Receitas - Gastos)
   reserveBalance: number;
   commitmentPercent: number;
   healthScore: number;

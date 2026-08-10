@@ -79,36 +79,30 @@ export default function VisaoDoMesPage() {
       </motion.div>
 
       {/* Main Stats Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <SummaryCard 
-          title="Saldo Líquido (Atual)" 
-          value={summary.currentCash} 
-          icon={Wallet}
-          variant="primary"
-        />
-        <SummaryCard 
-          title="Saldo Real (Mês)" 
-          value={summary.realBalance} 
-          icon={CheckCircle2}
-          variant="success"
-        />
-        <SummaryCard 
-          title="Saldo Projetado" 
-          value={summary.projectedEndBalance} 
+          title="Receitas do Mês" 
+          value={summary.totalIncome} 
           icon={TrendingUp}
           variant="primary"
         />
         <SummaryCard 
-          title="Gastos Totais" 
+          title="Gastos do Mês" 
           value={summary.totalExpenses} 
           icon={TrendingDown}
           variant="danger"
         />
         <SummaryCard 
+          title="Saldo Pós-Gastos" 
+          value={summary.totalIncome - summary.totalExpenses} 
+          icon={CheckCircle2}
+          variant="success"
+        />
+        <SummaryCard 
           title="Reserva de Emergência" 
           value={summary.reserveBalance} 
           icon={ShieldCheck}
-          variant="info"
+          variant="primary"
         />
       </motion.div>
 
@@ -183,7 +177,7 @@ export default function VisaoDoMesPage() {
                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
                      <AlertCircle size={12} className="text-primary" /> Saldo Projetado
                   </p>
-                  <p className="text-2xl font-display font-bold text-white">{formatCurrency(summary.projectedEndBalance)}</p>
+                  <p className="text-2xl font-display font-bold text-white">{formatCurrency(summary.balance)}</p>
                </div>
             </div>
          </motion.div>
@@ -222,7 +216,7 @@ export default function VisaoDoMesPage() {
                   <p className="text-xs font-bold uppercase tracking-widest">Dica da IA</p>
                </div>
                <p className="text-xs text-neutral-400 leading-relaxed">
-                  "Sua sobra real este mês é de {formatCurrency(summary.realBalance)}. Com os {formatCurrency(summary.pendingExpenses)} pendentes, seu saldo projetado é seguro."
+                  "Sua sobra real este mês é de {formatCurrency(summary.balance)}. Com os {formatCurrency(summary.pendingExpenses)} pendentes, seu saldo projetado é seguro."
                </p>
             </div>
          </motion.div>

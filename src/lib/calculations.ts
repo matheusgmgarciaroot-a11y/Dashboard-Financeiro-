@@ -68,11 +68,12 @@ export const calculateSummary = (
   if (monthsCovered < 3) healthScore -= 20;
   else if (monthsCovered < 6) healthScore -= 10;
 
-  if (projectedEndBalance < 0) healthScore -= 40;
-
   let healthStatus: FinancialSummary["healthStatus"] = "healthy";
   if (healthScore < 50) healthStatus = "critical";
   else if (healthScore < 75) healthStatus = "warning";
+
+  const reserveAccount = accounts.find(a => a.name.includes("Reserva"));
+  const actualReserveBalance = reserveAccount ? reserveAccount.balance : reserve.currentAmount;
 
   return {
     totalIncome,
@@ -81,10 +82,8 @@ export const calculateSummary = (
     optionalExpenses,
     paidExpenses,
     pendingExpenses,
-    projectedEndBalance,
-    realBalance,
-    currentCash,
-    reserveBalance: reserve.currentAmount,
+    balance: totalIncome - totalExpenses,
+    reserveBalance: actualReserveBalance,
     commitmentPercent,
     healthScore: Math.max(0, healthScore),
     healthStatus,

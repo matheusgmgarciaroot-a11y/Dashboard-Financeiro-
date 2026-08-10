@@ -136,7 +136,7 @@ export function PredictabilityCharts() {
               data={[
                 { name: "Essenciais", valor: summary.essentialExpenses },
                 { name: "Opcionais", valor: summary.optionalExpenses },
-                { name: "Sobra Livre", valor: summary.projectedEndBalance > 0 ? summary.projectedEndBalance : 0 },
+                { name: "Sobra Livre", valor: summary.balance > 0 ? summary.balance : 0 },
               ]}
               layout="vertical"
               margin={{ left: 40, right: 40 }}

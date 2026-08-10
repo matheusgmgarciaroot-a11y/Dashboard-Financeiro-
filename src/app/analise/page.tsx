@@ -46,8 +46,8 @@ export default function AnalisePage() {
     }))
     .sort((a, b) => b.value - a.value);
 
-  const totalLiquid = summary.currentCash;
-  const totalWithReserve = summary.currentCash + summary.reserveBalance;
+  const totalLiquid = summary.balance;
+  const totalWithReserve = summary.balance + summary.reserveBalance;
 
   return (
     <div className="p-8 space-y-8 max-w-[1600px] mx-auto">

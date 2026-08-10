@@ -7,15 +7,16 @@ import { ShieldCheck, Target, TrendingUp, ArrowUpRight, Info, Save, Pencil } fro
 import { cn } from "@/lib/utils";
 
 export default function ReservaPage() {
-  const { reserve, updateReserve } = useFinanceStore();
+  const { reserve, updateReserve, summary } = useFinanceStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({
-    currentAmount: reserve.currentAmount,
+    currentAmount: summary.reserveBalance,
     goalAmount: reserve.goalAmount,
     monthlyExpenses: reserve.monthlyExpenses
   });
 
-  const monthsCovered = reserve.monthlyExpenses > 0 ? reserve.currentAmount / reserve.monthlyExpenses : 0;
+  const currentAmount = summary.reserveBalance;
+  const monthsCovered = reserve.monthlyExpenses > 0 ? currentAmount / reserve.monthlyExpenses : 0;
   
   const getStatusColor = () => {
     if (monthsCovered < 3) return "text-danger";
@@ -73,7 +74,7 @@ export default function ReservaPage() {
                   className="bg-white/5 border border-primary/50 rounded-xs p-2 text-2xl font-display font-bold text-white w-full"
                 />
               ) : (
-                <h4 className="text-4xl font-display font-bold text-white">{formatCurrency(reserve.currentAmount)}</h4>
+                <h4 className="text-4xl font-display font-bold text-white">{formatCurrency(currentAmount)}</h4>
               )}
             </div>
             <div className="bg-carbon-900 border border-white/5 p-8 rounded-sm space-y-4">
@@ -106,7 +107,7 @@ export default function ReservaPage() {
              <div className="space-y-1">
                 <p className="text-sm font-bold text-white">Sobre sua reserva</p>
                 <p className="text-xs text-neutral-400 leading-relaxed">
-                   A reserva de emergncia deve cobrir entre 6 a 12 meses do seu custo de vida. No momento, vocs esto com {((reserve.currentAmount / reserve.goalAmount) * 100).toFixed(1)}% da meta atingida.
+                   A reserva de emergncia deve cobrir entre 6 a 12 meses do seu custo de vida. No momento, vocs esto com {((currentAmount / reserve.goalAmount) * 100).toFixed(1)}% da meta atingida.
                 </p>
              </div>
           </div>
@@ -133,12 +134,12 @@ export default function ReservaPage() {
                </div>
                <div className="flex justify-between text-xs">
                   <span className="text-neutral-500">Progresso</span>
-                  <span className="text-primary font-bold">{((reserve.currentAmount / reserve.goalAmount) * 100).toFixed(1)}%</span>
+                  <span className="text-primary font-bold">{((currentAmount / reserve.goalAmount) * 100).toFixed(1)}%</span>
                </div>
                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                   <div 
                     className="bg-primary h-full transition-all duration-1000" 
-                    style={{ width: `${(reserve.currentAmount / reserve.goalAmount) * 100}%` }}
+                    style={{ width: `${(currentAmount / reserve.goalAmount) * 100}%` }}
                   />
                </div>
             </div>
