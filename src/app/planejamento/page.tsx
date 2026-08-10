@@ -15,7 +15,7 @@ export default function PlanejamentoPage() {
   const formatCurrency = (val: number) => 
     val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName || !newAmount) return;
     
@@ -27,6 +27,38 @@ export default function PlanejamentoPage() {
     
     setNewName("");
     setNewAmount("");
+    
+    // Sync to create the transaction immediately
+    const { useFinanceStore } = await import('@/store/useFinanceStore');
+    await useFinanceStore.getState().syncPlannedExpenses();
+  };
+
+  const handleToggle = async (expense: PlannedExpense) => {
+    togglePaid(expense.id);
+    
+    const { useFinanceStore } = await import('@/store/useFinanceStore');
+    const { transactions, selectedDate, toggleTransactionStatus } = useFinanceStore.getState();
+    const targetDate = new Date(selectedDate);
+    
+    // Find the matching transaction for this month
+    const matchingTx = transactions.find(t => {
+      const d = new Date(t.date);
+      return d.getMonth() === targetDate.getMonth() && 
+             d.getFullYear() === targetDate.getFullYear() && 
+             t.description.toLowerCase() === expense.name.toLowerCase() &&
+             t.expenseType === "fixo";
+    });
+
+    if (matchingTx) {
+      // Toggle it to match the new state
+      const isNowPaid = !expense.isPaid;
+      if (
+        (isNowPaid && matchingTx.status !== "completed") || 
+        (!isNowPaid && matchingTx.status === "completed")
+      ) {
+        toggleTransactionStatus(matchingTx.id);
+      }
+    }
   };
 
   const essentialExpenses = expenses.filter(e => e.isEssential);
@@ -44,7 +76,7 @@ export default function PlanejamentoPage() {
     <div key={expense.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-sm group hover:bg-white/10 transition-colors">
       <div className="flex items-center gap-3">
         <button 
-          onClick={() => togglePaid(expense.id)}
+          onClick={() => handleToggle(expense)}
           className={cn(
             "transition-colors",
             expense.isPaid ? "text-primary" : "text-neutral-500 hover:text-white"

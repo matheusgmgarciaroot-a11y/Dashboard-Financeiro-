@@ -46,12 +46,12 @@ export const calculateSummary = (
 
   // FILTRO: Saldo das contas (sempre atual)
   const currentCash = accounts
-    .filter(acc => acc.id !== "4" && acc.type !== "savings")
+    .filter(acc => acc.name !== "Reserva Emergência" && acc.type !== "savings")
     .reduce((acc, accnt) => acc + accnt.balance, 0);
   
   const pendingIncome = totalIncome - paidIncome;
   
-  // Saldo Real = O que você tem na conta AGORA
+  // Saldo Real = O que você tem na conta AGORA (excluindo a reserva)
   const realBalance = currentCash;
   
   // Saldo Projetado = O que você tem AGORA + o que vai entrar - o que vai sair (pendente)

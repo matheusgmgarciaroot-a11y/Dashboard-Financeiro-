@@ -8,7 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
 
 export function MonthNavigator() {
-  const { selectedDate, setSelectedDate, replicateFixedExpenses } = useFinanceStore();
+  const { selectedDate, setSelectedDate, syncPlannedExpenses } = useFinanceStore();
   const date = new Date(selectedDate);
 
   const handlePrev = () => {
@@ -63,7 +63,7 @@ export function MonthNavigator() {
         </button>
         
         <button 
-          onClick={replicateFixedExpenses}
+          onClick={syncPlannedExpenses}
           className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-sm text-[10px] font-bold text-primary uppercase tracking-widest hover:bg-primary hover:text-carbon-black transition-all"
         >
           <RefreshCcw size={14} /> Iniciar Controle Mensal

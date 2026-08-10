@@ -34,7 +34,7 @@ interface FinanceState {
   updateReserve: (reserve: Partial<FinancialReserve>) => void;
   runSimulation: (request: SimulationRequest) => SimulationResult;
   setSelectedDate: (date: string) => void;
-  replicateFixedExpenses: () => void;
+  syncPlannedExpenses: () => Promise<void>;
   refreshSummary: () => void;
   fetchInitialData: () => Promise<void>;
 }
@@ -84,24 +84,40 @@ export const useFinanceStore = create<FinanceState>()(
 
         let finalAccounts = accountsData || [];
 
-        // Auto-seed contas iniciais se o usuário for novo (array vazio)
-        if (finalAccounts.length === 0) {
+        // Remover duplicatas e contas indesejadas (garante as 4 requeridas)
+        const requiredAccounts = ["Conta Matheus", "Conta Heloisa", "Dinheiro Físico", "Reserva Emergência"];
+        const sanitizedAccounts: any[] = [];
+        
+        requiredAccounts.forEach(name => {
+          const acc = finalAccounts.find((a: any) => a.name === name);
+          if (acc) sanitizedAccounts.push(acc);
+        });
+
+        if (sanitizedAccounts.length < 4) {
+          const missing = requiredAccounts.filter(name => !sanitizedAccounts.some(a => a.name === name));
+          
           const defaultAccounts = [
             { name: "Conta Matheus", balance: 0, type: "checking", owner: "Matheus", institution: "Itaú", currency: "BRL", color: "#DFFF00", user_id: user.id },
             { name: "Conta Heloisa", balance: 0, type: "checking", owner: "Heloisa", institution: "Nubank", currency: "BRL", color: "#FF69B4", user_id: user.id },
             { name: "Dinheiro Físico", balance: 0, type: "cash", owner: "Ambos", institution: "Carteira", currency: "BRL", color: "#4ADE80", user_id: user.id },
             { name: "Reserva Emergência", balance: 0, type: "savings", owner: "Ambos", institution: "Nubank", currency: "BRL", color: "#0066FF", user_id: user.id }
           ];
+
+          const toInsert = defaultAccounts.filter(a => missing.includes(a.name));
           
-          const { data: insertedAccounts } = await supabase
-            .from("accounts")
-            .insert(defaultAccounts)
-            .select();
-            
-          if (insertedAccounts) {
-            finalAccounts = insertedAccounts;
+          if (toInsert.length > 0) {
+            const { data: insertedAccounts } = await supabase
+              .from("accounts")
+              .insert(toInsert)
+              .select();
+              
+            if (insertedAccounts) {
+              sanitizedAccounts.push(...insertedAccounts);
+            }
           }
         }
+        
+        finalAccounts = sanitizedAccounts;
 
         // Fetch Transactions
         const { data: txData } = await supabase
@@ -300,46 +316,44 @@ export const useFinanceStore = create<FinanceState>()(
         return getSimulationRecommendation(request, get().summary, get().reserve);
       },
 
-      setSelectedDate: (date) => {
+      setSelectedDate: async (date) => {
         set({ selectedDate: date });
+        await get().syncPlannedExpenses();
         get().refreshSummary();
       },
 
-      replicateFixedExpenses: () => {
-        const { transactions, selectedDate } = get();
-        const targetDate = new Date(selectedDate);
-        const prevMonthDate = new Date(targetDate);
-        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-
-        const prevMonthTransactions = transactions.filter(t => {
-          const d = new Date(t.date);
-          return d.getMonth() === prevMonthDate.getMonth() && d.getFullYear() === prevMonthDate.getFullYear();
-        });
-
-        const fixedExpenses = prevMonthTransactions.filter(t => t.expenseType === "fixo");
+      syncPlannedExpenses: async () => {
+        // Import inline to avoid circular dependency issues at the top level
+        const { usePlanningStore } = await import('@/store/usePlanningStore');
+        const planned = usePlanningStore.getState().expenses;
+        const { transactions, selectedDate, addTransaction } = get();
         
-        const currentMonthTransactions = transactions.filter(t => {
+        const targetDate = new Date(selectedDate);
+        const targetMonth = targetDate.getMonth();
+        const targetYear = targetDate.getFullYear();
+        
+        const currentMonthFixedTxs = transactions.filter(t => {
           const d = new Date(t.date);
-          return d.getMonth() === targetDate.getMonth() && d.getFullYear() === targetDate.getFullYear();
+          return d.getMonth() === targetMonth && d.getFullYear() === targetYear && t.expenseType === "fixo";
         });
 
-        const newTxs: Transaction[] = [];
-
-        fixedExpenses.forEach(fixed => {
-          const alreadyExists = currentMonthTransactions.some(t => t.description === fixed.description);
-          if (!alreadyExists) {
-            newTxs.push({
-              ...fixed,
-              id: Math.random().toString(36).substring(2, 9),
-              date: targetDate.toISOString(),
-              status: "pending"
-            });
+        for (const p of planned) {
+          const exists = currentMonthFixedTxs.some(t => t.description.toLowerCase() === p.name.toLowerCase());
+          if (!exists) {
+            await addTransaction({
+              description: p.name,
+              amount: p.amount,
+              type: "expense",
+              category: p.isEssential ? "moradia" : "outros",
+              date: new Date(targetYear, targetMonth, 5).toISOString(), // Dia 5 como padrão de vencimento
+              paymentMethod: "pix",
+              account: "Conta Matheus", // Default
+              responsible: "Ambos",
+              priority: p.isEssential ? "essential" : "optional",
+              expenseType: "fixo",
+              status: p.isPaid ? "completed" : "pending"
+            } as any);
           }
-        });
-
-        if (newTxs.length > 0) {
-          set({ transactions: [...newTxs, ...transactions] });
-          get().refreshSummary();
         }
       },
 

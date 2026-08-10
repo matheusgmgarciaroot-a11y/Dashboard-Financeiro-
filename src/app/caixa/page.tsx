@@ -51,17 +51,17 @@ export default function CaixaPage() {
         <div>
            <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1">Total em Caixa (Somado)</p>
            <h2 className="text-4xl font-display font-bold text-white">
-             {formatCurrency(accounts.reduce((acc, a) => acc + a.balance, 0))}
+             {formatCurrency(accounts.filter(a => a.type !== "savings").reduce((acc, a) => acc + a.balance, 0))}
            </h2>
         </div>
         <div className="flex gap-4">
            <div className="text-right">
               <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Matheus</p>
-              <p className="text-lg font-bold text-white">{formatCurrency(accounts.filter(a => a.owner === "Matheus").reduce((acc, a) => acc + a.balance, 0))}</p>
+              <p className="text-lg font-bold text-white">{formatCurrency(accounts.filter(a => a.owner === "Matheus" && a.type !== "savings").reduce((acc, a) => acc + a.balance, 0))}</p>
            </div>
            <div className="text-right border-l border-white/10 pl-4">
               <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Heloisa</p>
-              <p className="text-lg font-bold text-white">{formatCurrency(accounts.filter(a => a.owner === "Heloisa").reduce((acc, a) => acc + a.balance, 0))}</p>
+              <p className="text-lg font-bold text-white">{formatCurrency(accounts.filter(a => a.owner === "Heloisa" && a.type !== "savings").reduce((acc, a) => acc + a.balance, 0))}</p>
            </div>
         </div>
       </div>
