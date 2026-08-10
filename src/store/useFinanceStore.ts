@@ -212,34 +212,73 @@ export const useFinanceStore = create<FinanceState>()(
         get().refreshSummary();
       },
 
-      updateTransaction: (id, txData) => {
+      updateTransaction: async (id, txData) => {
         const { transactions } = get();
         const newTransactions = transactions.map(t => 
           t.id === id ? { ...t, ...txData } : t
         );
+        
+        const user = useAuthStore.getState().user;
+        if (user) {
+          const payload: any = { ...txData };
+          if (payload.expenseType !== undefined) { payload.expense_type = payload.expenseType; delete payload.expenseType; }
+          if (payload.paymentMethod !== undefined) { payload.payment_method = payload.paymentMethod; delete payload.paymentMethod; }
+          if (payload.account !== undefined) { payload.account_name = payload.account; delete payload.account; }
+          if (payload.installments !== undefined) { 
+            payload.installments_current = payload.installments.current;
+            payload.installments_total = payload.installments.total;
+            delete payload.installments;
+          }
+          if (payload.date !== undefined) { payload.date = new Date(payload.date).toISOString().split('T')[0]; }
+
+          await supabase.from("transactions").update(payload).eq("id", id).eq("user_id", user.id);
+        }
+
         set({ transactions: newTransactions });
         get().refreshSummary();
       },
 
-      deleteTransaction: (id) => {
+      deleteTransaction: async (id) => {
         const newTransactions = get().transactions.filter(tx => tx.id !== id);
+        
+        const user = useAuthStore.getState().user;
+        if (user) {
+          await supabase.from("transactions").delete().eq("id", id).eq("user_id", user.id);
+        }
+
         set({ transactions: newTransactions });
         get().refreshSummary();
       },
 
-      toggleTransactionStatus: (id) => {
+      toggleTransactionStatus: async (id) => {
         const { transactions } = get();
+        const tx = transactions.find(t => t.id === id);
+        if (!tx) return;
+        
+        const newStatus = tx.status === "completed" ? "pending" : "completed";
         const newTransactions = transactions.map(t => 
-          t.id === id ? { ...t, status: (t.status === "completed" ? "pending" : "completed") as TransactionStatus } : t
+          t.id === id ? { ...t, status: newStatus as TransactionStatus } : t
         );
+        
+        const user = useAuthStore.getState().user;
+        if (user) {
+          await supabase.from("transactions").update({ status: newStatus }).eq("id", id).eq("user_id", user.id);
+        }
+
         set({ transactions: newTransactions });
         get().refreshSummary();
       },
 
-      updateAccountBalance: (id, amount) => {
+      updateAccountBalance: async (id, amount) => {
         const newAccounts = get().accounts.map(acc => 
           acc.id === id ? { ...acc, balance: amount } : acc
         );
+        
+        const user = useAuthStore.getState().user;
+        if (user) {
+          await supabase.from("accounts").update({ balance: amount }).eq("id", id).eq("user_id", user.id);
+        }
+
         set({ accounts: newAccounts });
         get().refreshSummary();
       },
