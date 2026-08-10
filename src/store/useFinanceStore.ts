@@ -133,7 +133,7 @@ export const useFinanceStore = create<FinanceState>()(
 
           const currentTx: Transaction = {
             ...txData,
-            id: Math.random().toString(36).substring(2, 9),
+            id: crypto.randomUUID(),
             description: `${txData.description} (${current}/${total})`,
             date: baseDate.toISOString(),
           };
@@ -145,7 +145,7 @@ export const useFinanceStore = create<FinanceState>()(
             
             generatedTransactions.push({
               ...txData,
-              id: Math.random().toString(36).substring(2, 9),
+              id: crypto.randomUUID(),
               description: `${txData.description} (${current + i}/${total})`,
               date: futureDate.toISOString(),
               status: "pending",
@@ -158,17 +158,22 @@ export const useFinanceStore = create<FinanceState>()(
         } else {
           generatedTransactions.push({
             ...txData,
-            id: Math.random().toString(36).substring(2, 9),
+            id: crypto.randomUUID(),
             date: txData.date || new Date().toISOString(),
           });
         }
         
         const newTransactions = [...generatedTransactions, ...transactions];
         
+        const user = useAuthStore.getState().user;
+        let accountToUpdate: Account | undefined;
+
         const newAccounts = accounts.map(acc => {
           if (acc.name === txData.account) {
             const amount = txData.type === "income" ? txData.amount : -txData.amount;
-            return { ...acc, balance: acc.balance + amount };
+            const updatedAccount = { ...acc, balance: acc.balance + amount };
+            accountToUpdate = updatedAccount;
+            return updatedAccount;
           }
           return acc;
         });
@@ -178,7 +183,6 @@ export const useFinanceStore = create<FinanceState>()(
           newReserve.currentAmount += txData.amount;
         }
 
-        const user = useAuthStore.getState().user;
         if (user) {
           // Salvar no Supabase
           const payload = generatedTransactions.map(tx => ({
@@ -201,6 +205,10 @@ export const useFinanceStore = create<FinanceState>()(
           });
 
           await supabase.from("transactions").insert(payload);
+          
+          if (accountToUpdate) {
+            await supabase.from("accounts").update({ balance: accountToUpdate.balance }).eq("id", accountToUpdate.id).eq("user_id", user.id);
+          }
         }
 
         set({ 

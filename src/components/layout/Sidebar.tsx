@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Visão do Mês", href: "/" },
   { icon: TrendingUp, label: "Receitas / Salários", href: "/receitas" },
   { icon: ArrowRightLeft, label: "Gastos do Mês", href: "/gastos" },
+  { icon: Target, label: "Planejamento Mensal", href: "/planejamento" },
   { icon: PieChart, label: "Análise de Gastos", href: "/analise" },
   { icon: ShieldCheck, label: "Reserva Financeira", href: "/reserva" },
   { icon: Wallet, label: "Valor em Caixa", href: "/caixa" },
