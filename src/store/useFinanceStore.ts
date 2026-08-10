@@ -135,6 +135,7 @@ export const useFinanceStore = create<FinanceState>()(
         if (txData) set({ transactions: txData as any });
         if (invData) set({ investments: invData as any });
         
+        await get().syncPlannedExpenses();
         get().refreshSummary();
       },
 
