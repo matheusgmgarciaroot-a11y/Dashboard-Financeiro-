@@ -9,9 +9,18 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function ReceitasPage() {
-  const { transactions } = useFinanceStore();
+  const { transactions, selectedDate } = useFinanceStore();
   const { openTransactionModal } = useUIStore();
-  const incomes = transactions.filter(t => t.type === "income");
+  
+  const targetDate = new Date(selectedDate);
+  const targetMonth = targetDate.getMonth();
+  const targetYear = targetDate.getFullYear();
+
+  const incomes = transactions.filter(t => {
+    if (t.type !== "income") return false;
+    const d = new Date(t.date);
+    return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
+  });
 
   const formatCurrency = (val: number) => 
     val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

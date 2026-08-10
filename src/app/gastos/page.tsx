@@ -23,13 +23,21 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function GastosPage() {
-  const { transactions, deleteTransaction, toggleTransactionStatus } = useFinanceStore();
+  const { transactions, selectedDate, deleteTransaction, toggleTransactionStatus } = useFinanceStore();
   const { openTransactionModal } = useUIStore();
   const [search, setSearch] = useState("");
   const [respFilter, setRespFilter] = useState("Todos");
   const [statusFilter, setStatusFilter] = useState("Todos");
 
-  const expenses = transactions.filter(t => t.type === "expense");
+  const targetDate = new Date(selectedDate);
+  const targetMonth = targetDate.getMonth();
+  const targetYear = targetDate.getFullYear();
+
+  const expenses = transactions.filter(t => {
+    if (t.type !== "expense") return false;
+    const d = new Date(t.date);
+    return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
+  });
 
   const filteredExpenses = expenses.filter(t => {
     const matchesSearch = t.description.toLowerCase().includes(search.toLowerCase());
